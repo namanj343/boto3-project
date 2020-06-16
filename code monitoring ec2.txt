@@ -1,0 +1,68 @@
+//code for Lambda function to print all the instance which are stopped ,shutted-down,terminated
+//needed to filtered with the help of file(1).lambda-auto-remediate,2).autodeploy)
+
+import json
+
+import boto3
+
+snsclient = boto3.client('sns')
+
+ec2client = boto3.resource('ec2')
+
+def lambda_handler(event, context):
+
+
+    instances = ec2client.instances.filter(
+    
+             Filters=[{'Name': 'instance-state-name',
+ 'Values': ['shutting-down','stopped','terminated']}])
+
+    for instance in instances:
+      
+        print(instance.state['Name'])
+
+        print(instance.id,instance.instance_type,instance.state['Name'])
+      
+        message={"instance id":instance.id,
+        "instance state":instance.state,
+        "instance type": instance.type
+    }  
+    snsclient.publish(TopicArn='arn:aws:sns:us-east-1:644444375014:ec2topic',Message='json.dumps(message)')
+   
+ 
+return 'hi'
+
+
+
+
+60 datapoints with 1 hrs
+
+//CPU Utilization
+This function  is creating an alarm for ec2 instance for cpu utilization:
+
+import json
+import boto3
+client = boto3.client('cloudwatch')
+
+# Create alarm
+ client.put_metric_alarm(
+ AlarmName='Web_Server_CPU_Utilization',
+    ComparisonOperator='GreaterThanThreshold',
+    EvaluationPeriods=1,
+    MetricName='CPUUtilization',
+    Namespace='AWS/EC2',
+    Period=60,
+    Unit='Seconds',
+    Statistic='Average',
+    Threshold=85.0,
+    ActionsEnabled=False,
+    AlarmDescription='Alarm when ec2 server CPU exceeds 85%',
+    Dimensions=[
+        {
+          'Name': 'InstanceId',
+          'Value': 'i-0d521f37b67229775'
+        },
+    ],
+    
+)
+    
